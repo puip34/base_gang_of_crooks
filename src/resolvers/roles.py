@@ -2,7 +2,10 @@ from server.database.db_manager import db_manager
 from server.database.models import Role
 
 def create_role(role_name: str) -> dict:
-    res = db_manager.execute(query="INSERT INTO Roles (RoleName) VALUES (?) RETURNING RoleID, RoleName", args=(role_name,))
+    res = db_manager.execute(
+        query="INSERT INTO Roles (RoleName) VALUES (?) RETURNING RoleID, RoleName",
+        args=(role_name,)
+    )
     res["result"] = None if not res["result"] else Role(id=res["result"][0], name=res["result"][1])
     return res
 
