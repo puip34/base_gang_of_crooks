@@ -1,9 +1,60 @@
-from sqlalchemy import Column, Integer, String
-from server.database.base import Base
+from typing import Optional
+from pydantic import BaseModel
 
-class Task(Base):
-    __tablename__ = "tasks"
+class User(BaseModel):
+    id: int
+    username: str
+    password: str
+    email: str
+    role: str
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(String, index=True)
+class Role(BaseModel):
+    id: int
+    name: str
+
+class Project(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    creator_user_id: int
+
+class Task(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    project_id: int
+    creator_user_id: int
+    assignee_user_id: Optional[int]
+
+class Comment(BaseModel):
+    id: int
+    task_id: int
+    user_id: int
+    comment_text: str
+    timestamp: Optional[str]
+
+class UserRole(BaseModel):
+    id: int
+    user_id: int
+    role_id: int
+
+class ProjectUserRole(BaseModel):
+    id: int
+    project_id: int
+    user_id: int
+    role_id: int
+
+class CompletedProject(BaseModel):
+    id: int
+    project_id: int
+    completion_date: Optional[str]
+
+class TaskStatus(BaseModel):
+    id: int
+    status_name: str
+
+class TaskHistory(BaseModel):
+    id: int
+    task_id: int
+    status_id: int
+    timestamp: Optional[str]
