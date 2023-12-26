@@ -1,30 +1,27 @@
+import fastapi
 from sqlalchemy.orm import Session
-from typing import List
+from server.database import db_manager
+from server.database.schemas import Task, TaskCreate
+from server.resolvers import tasks
 
-from server.database.models import Task as DBTask
-from server.database.schemas import Task as TaskModel
+tasks_router = fastapi.APIRouter(prefix='/tasks', tags=["Tasks"])
 
-def create_task(db: Session, task: TaskModel) -> TaskModel:
-    db_task = DBTask(**task.dict())
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
+@tasks_router.post("/", response_model=Task)
+async def create_task(task: TaskCreate, db: Session = fastapi.Depends(db_manager.get_db)):
+    return tasks.create_task(db, task)
 
-def get_task(db: Session, task_id: int) -> DBTask:
-    return db.query(DBTask).filter(DBTask.id == task_id).first()
+@tasks_router.get("/{task_id}", response_model=Task)
+async def read_task(task_id: int, db: Session = fastapi.Depends(db_manager.get_db)):
+    return tasks.get_task(db, task_id)
 
-def get_all_tasks(db: Session) -> List[DBTask]:
-    return db.query(DBTask).all()
+@tasks_router.get("/", response_model=list[Task])
+async def read_tasks(skip: int = 0, limit: int = 10, db: Session = fastapi.Depends(db_manager.get_db)):
+    return tasks.get_all_tasks(db, skip=skip, limit=limit)
 
-def update_task(db: Session, task_id: int, updated_task: TaskModel) -> DBTask:
-    db_task = get_task(db=db, task_id=task_id)
-    for key, value in updated_task.dict(exclude_unset=True).items():
-        setattr(db_task, key, value)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
+@tasks_router.put("/{task_id}", response_model=Task)
+async def update_task(task_id: int, task: TaskCreate, db: Session = fastapi.Depends(db_manager.get_db)):
+    return tasks.update_task(db, task_id, task)
 
-def delete_task(db: Session, task_id: int) -> None:
-    db.query(DBTask).filter(DBTask.id == task_id).delete()
-    db.commit()
+@tasks_router.delete("/{task_id}", response_model=None)
+async def delete_task(task_id: int, db: Session = fastapi.Depends(db_manager.get_db)):
+    return tasks.delete_task(db, task_id)
