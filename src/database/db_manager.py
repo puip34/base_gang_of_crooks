@@ -1,27 +1,17 @@
-import sqlite3
-from typing import List, Tuple
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session
 
-class DBManager:
-    def __init__(self, db_path: str = "task_manager.db"):
-        self.conn = sqlite3.connect(db_path)
-        self.cursor = self.conn.cursor()
+DATABASE_URL = "sqlite:///./test.db"  # You can replace this with your actual database URL
+engine = create_engine(DATABASE_URL)
 
-    def execute(self, query: str, args: Tuple = None, many: bool = False) -> dict:
-        try:
-            if args:
-                self.cursor.execute(query, args)
-            else:
-                self.cursor.execute(query)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
-            if many:
-                result = self.cursor.fetchall()
-            else:
-                result = self.cursor.fetchone()
-
-            self.conn.commit()
-            return {"result": result}
-        except Exception as e:
-            return {"error": str(e)}
-
-# Singleton pattern to ensure a single instance of DBManager
-db_manager = DBManager()
+def get_db() -> Session:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
